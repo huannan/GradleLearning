@@ -1,0 +1,66 @@
+// 自定义属性
+ext {
+    test_ext_name = 'Huannan'
+    test_ext_age = 27
+}
+
+task createTask1 {
+    println 'run'
+    doFirst {
+        println 'doFirst'
+    }
+
+    doLast {
+        println 'doLast'
+    }
+}
+
+tasks.create("createTask2") {
+    doFirst {
+        println 'doFirst'
+    }
+    doLast {
+        println 'doLast'
+    }
+}
+
+task A {
+    doFirst {
+        println 'A'
+    }
+}
+
+//单任务依赖：通过dependsOn指定要依赖的任务
+task B(dependsOn: A) {
+    doFirst {
+        println 'B'
+    }
+}
+
+task C {
+    doFirst {
+        println 'C'
+    }
+}
+
+//多任务依赖
+task D {
+    dependsOn A, C
+    doFirst {
+        println 'D'
+    }
+}
+
+//任务之间的交互
+task E {
+    println "hello e $test_ext_name"
+    println "E是不是Project的属性：" + project.hasProperty('E')
+}
+
+E.doFirst {
+    println 'doFirst'
+}
+
+E.doLast {
+    println 'doLast'
+}

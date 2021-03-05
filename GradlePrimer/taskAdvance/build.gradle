@@ -1,0 +1,199 @@
+/**
+ * 第一种创建任务方式：
+ * 方法原型：Task task(String name) throws InvalidUserDataException;
+ */
+//定义Task变量接收task()方法创建的Task,方法配置创建的Task
+def Task taskA = task("taskA")
+//配置创建的Task
+taskA.doFirst {
+    println "第一种创建任务的方式"
+}
+
+// 任务的启用和禁用
+taskA.enabled = false
+
+/**task
+ * 第二种创建任务方式：可在Map参数中进行相关配置，如依赖、任务描述、组别等
+ * 方法原型：Task task(Map<String, ?> args, String name) throws InvalidUserDataException;
+ */
+def Task taskB = task(group: BasePlugin.BUILD_GROUP, taskB, description: "描述")
+//配置创建的Task
+taskB.doLast {
+    println "第二种创建任务的方式"
+    println "任务taskB分组：${taskB.group}"
+    println "任务taskB描述：${taskB.description}"
+}
+
+/**
+ * 第三种创建任务方式：通过闭包的方式创建Task,闭包里的委托对象就是Task,即可在闭包内调用Task
+ * 的一切属性和方法来进行Task的配置
+ * 方法原型：Task task(String name, Closure configureClosure);
+ */
+task taskC {
+    description 'taskC的描述'
+    group BasePlugin.BUILD_GROUP
+    doFirst {
+        println "第三种创建任务的方式"
+        println "任务taskC分组：${group}"
+        println "任务taskC描述：${description}"
+    }
+}
+
+/**
+ * 第四种创建任务的方式：可在闭包中灵活配置，也可在Map参数中配置，闭包中中的配置父覆盖Map中相同的配置
+ * 方法原型：Task task(Map<String, ?> args, String name, Closure configureClosure);
+ */
+def Task taskD = task(group: BasePlugin.BUILD_GROUP, taskD, description: "描述") {
+    description 'taskD的描述'
+    group 'meizu'
+    doFirst {
+        println "第四种创建任务的方式"
+        println "任务taskD分组：${group}"
+        println "任务taskD描述：${description}"
+    }
+}
+
+/**
+ * 访问任务的第一种方式：Task名称.doLast{}*
+ */
+task taskF {
+
+}
+
+taskF.doLast {
+    println "第一种访问任务的方式"
+}
+
+tasks['taskF'].doLast {
+    println "第二种访问任务的方式"
+}
+
+task taskG {
+
+}
+
+/**
+ * 访问任务的第三种方式：使用路径访问任务
+ */
+task taskH {
+    println 'taskH'
+    //通过路径访问任务，参数可以是路径（没有访问成功，写法如下）
+    println tasks.findByPath(':GradleTask:taskG')
+    //通过路径访问任务，参数可以是任务名称
+    println tasks.findByPath('taskG')
+    println tasks.getByPath('taskG')
+}
+
+//任务分组与描述
+def Task task1 = task taskI
+task1.group = BasePlugin.BUILD_GROUP
+task1.description = '测试任务分组与描述'
+task1.doLast {
+    println "taskK is group = ${group}, description = ${description}"
+}
+
+//任务执行流程分析
+task taskJ(type: CustomTask) {
+    doFirst {
+        println "Task执行之前调用：doFirst"
+    }
+    doLast {
+        println "Task执行之后调用：doLast"
+    }
+}
+
+class CustomTask extends DefaultTask {
+    @TaskAction
+    def doSelf() {
+        println "Task执行本身调用：doSelf"
+    }
+}
+
+/**
+ * 任务顺序
+ * taskC.shouldRunAfter(taskD)：表示taskC要在taskD的后面执行
+ * taskC.mustRunAfter(taskD)：表示taskC必须要在taskD的后面执行
+ */
+task taskM {
+    doFirst {
+        println "taskM"
+    }
+}
+task taskN {
+    doFirst {
+        println "taskN"
+    }
+}
+taskM.shouldRunAfter(taskN)
+
+
+//任务的onlyIf断言
+// ./gradlew -P buildApp=first buildTask
+final String BUILD_ALL = 'all'
+final String BUILD_FIRST = 'first'
+final String BUILD_OTHERS = 'others'
+
+task taskTencentRelease {
+    doLast {
+        println "打应用宝渠道包"
+    }
+}
+
+task taskBaiduRelease {
+    doLast {
+        println "打百度手机助手渠道包"
+    }
+}
+
+task taskMiuiRelease {
+    doLast {
+        println "打小米应用商店渠道包"
+    }
+}
+
+task buildTask {
+    //为buildTask添加依赖的具体任务
+    dependsOn taskTencentRelease, taskBaiduRelease, taskMiuiRelease
+    group BasePlugin.BUILD_GROUP
+    description "打渠道包"
+}
+
+taskTencentRelease.onlyIf {
+    if (project.hasProperty("buildApp")) {
+        Object buildApp = project.property("buildApp")
+        return BUILD_ALL == buildApp || BUILD_FIRST == buildApp
+    } else {
+        return true
+    }
+}
+
+taskBaiduRelease.onlyIf {
+    if (project.hasProperty("buildApp")) {
+        Object buildApp = project.property("buildApp")
+        return BUILD_ALL == buildApp || BUILD_FIRST == buildApp
+    } else {
+        return true
+    }
+}
+
+taskMiuiRelease.onlyIf {
+    if (project.hasProperty("buildApp")) {
+        Object buildApp = project.property("buildApp")
+        return BUILD_OTHERS == buildApp || BUILD_ALL == buildApp
+    } else {
+        return true
+    }
+}
+
+//任务规则
+tasks.addRule("对该规则的一个描述") { String taskName ->
+    task(taskName) {
+        doLast {
+            println "${taskName} 不存在"
+        }
+    }
+}
+
+task taskTest {
+    dependsOn taskX
+}

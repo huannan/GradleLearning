@@ -1,0 +1,193 @@
+task test1String {
+    //使用def关键字定义变量，
+    def str1 = "双引号"
+    def str2 = '单引号'
+
+    println "双引号定义的字符串：" + str1
+    println "双引号定义的字符串：" + str1.class
+    println "单引号定义的字符串：" + str2
+
+    // 变量动态变化
+    str1 = true;
+    println "双引号定义的字符串：" + str1.class
+
+    // 使用$运算符
+    println "双引号定义的字符串：${str1}"
+    // 只有一个变量的时候可以省去中括号
+    println "双引号定义的字符串：$str1"
+
+    // 单引号定义的字符串不能使用表达式进行运算
+    println '单引号定义的字符串：$str2'
+}
+
+task test2List {
+    // 定义List
+    def numList = [1, 2, 3, 4, 5, 6]
+    def weekList = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+    println "list的类型：" + numList.class
+    println "weekList的类型：" + weekList.class
+
+    //访问集合里面的元素
+    println '第一个元素：' + numList[0]//访问第一个元素
+    println '第二个元素：' + numList[1]//访问第二个元素，以此类推
+
+    println '最后一个元素：' + numList[-1]//访问最后一个元素
+    println '倒数第二个元素：' + numList[-2]//访问倒数第二个元素，以此类推
+    println '某个范围内元素：' + numList[2..4]//访问某个范围内元素，以此类推
+
+    // 使用each遍历集合中的元素
+    weekList.each {
+        // 使用it作为迭代的元素变量，不能写错喔
+        println it
+    }
+}
+
+task test3Map {
+    // 定义Map
+    def map = ['name': 'huannan', 'age': 27]
+    println "map的类型${map.getClass()}"
+
+    // 访问Map里面的元素
+    println map.name
+    println map['age']
+
+    // 遍历Map中的元素
+    map.each {
+        println "Key=${it.key} Value=${it.value}"
+    }
+}
+
+def methodA(int a, int b) {
+    println "methodA invoke a=$a b=$b"
+    a + b
+}
+
+task test4Method {
+    // 方法调用
+    methodA(1, 2)
+    methodA 1, 2
+
+    // 获取方法返回的结果
+    def result = methodA 1, 2
+    println "获取方法返回的结果=$result"
+
+    // 代码块作为参数传递
+    def list = [1, 2, 3, 4, 5];
+    list.each(
+            //闭包参数
+            {
+                println it
+            }
+    )
+
+    // Groovy规定，如果方法的最后一个参数是闭包，可以直接放到方法外面
+    list.each() {
+        println it
+    }
+
+    //简写方式
+    list.each {
+        println it
+    }
+}
+
+class Student {
+    String name
+    int age
+
+    void setName(String name) {
+        this.name = name
+    }
+
+    def getInfo() {
+        println "name is ${name}, age is ${age}"
+    }
+}
+
+task test5Bean {
+    def student = new Student()
+    student.name = 'Huannan'
+    student.age = 27
+
+    println "名字是：${student.name}"
+    println "年龄是：${student.getAge()}"
+}
+
+task test6Closure {
+    mEach {
+        println it
+    }
+
+    mEachWithParams { key, value ->
+        println "$key is $value"
+    }
+}
+
+//1.定义一个方法，参数closure用于接收闭包
+//2.闭包的执行就是花括号里面代码的执行
+//3.闭包接收的参数就是闭包参数closure参数中的i，如果是一个参数默认就是it变量
+def mEach(closure) {
+    for (int i in 1..3) {
+        closure(i)
+    }
+}
+
+def mEachWithParams(action) {
+    def map = ["name": "Groovy", "age": 10]
+    map.each {
+        action(it.key, it.value)
+    }
+}
+
+def methodB() {
+    println "methodB in root:${this.getClass()}"
+}
+
+class Delegate {
+    def methodB() {
+        println "methodB in Delegate:${this.getClass()}"
+    }
+
+    //闭包
+    def test(Closure closure) {
+        closure(this);
+    }
+}
+
+def configStudent(Closure<Student> closure) {
+    Student student = new Student()
+    // 设置委托对象为当前创建的Student实例
+    closure.setDelegate(student)
+    // 设置委托模式优先，如果不设置闭包内方法的处理者是thisObject
+    closure.setResolveStrategy(Closure.DELEGATE_FIRST)
+    closure(student)
+}
+
+task test7Delegate {
+    new Delegate().test {
+        // Groovy闭包的三个属性：thisObject、owner、delegate
+        println "thisObject:${thisObject.getClass()}"
+        println "owner:${owner.getClass()}"
+        println "delegate:${delegate.getClass()}"
+
+        // 闭包默认it
+        println "闭包默认it:" + it.getClass()
+
+        // 定义的方法，优先使用thisObject来处理
+        methodB()
+        // 闭包中的方法
+        it.methodB()
+    }
+
+    configStudent {
+        println "thisObject:${thisObject.getClass()}"
+        println "owner:${owner.getClass()}"
+        println "delegate:${delegate.getClass()}"
+
+        // Gradle 中一般会指定 delegate 为当前的 it，这样我们将可以通过 delegate 指定的对象来操作 it 了
+        // 通过闭包委托这个特性，看到了Android Gradle配置的味道了哈哈哈哈
+        setName "Huannan"
+        age = 27
+        getInfo()
+    }
+}

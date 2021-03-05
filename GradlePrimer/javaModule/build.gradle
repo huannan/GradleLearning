@@ -1,0 +1,101 @@
+apply plugin: 'java'
+apply from: 'version.gradle'
+
+//plugins {
+//    id 'java'
+//}
+
+sourceSets {
+    //指定新的源代码集合
+    vip {
+
+    }
+
+    //修改默认目录，下面还是和默认位置一样，如需配置其他目录修改即可
+    /*
+    main {
+        java {
+            srcDir 'src/java'
+        }
+        resources {
+            srcDir 'src/resources'
+        }
+    }
+    */
+}
+
+//配置仓库位置
+repositories {
+    //仓库类型如jcenter库、ivy库、maven中心库、maven本地库、maven私服库等
+    mavenCentral()
+    mavenLocal()
+//    maven {
+//        uri "http"//xxxx
+//    }
+    jcenter()
+    google()
+    //...
+}
+
+//配置具体的依赖
+dependencies {
+    //依赖三要素：group(组别)、name(名称)、version(版本)
+    //分别对应Maven中的GAV(groupid、artifactid、version)
+
+    //完整写法
+    // implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.1'
+    //简写
+    implementation 'com.squareup.okhttp3:okhttp:3.0.1'
+    // implementation project('task')
+
+    /*
+    //配置单个jar
+    implementation file('libs/java1.jar')
+    //配置多个jar
+    implementation files('libs/java1.jar','libs/java2.jar')
+    //批量配置jar,配置好jar所在路径，会将后缀为jar的所有文件依赖到项目中
+    implementation fileTree(dir:'libs',include:'*.jar')
+    */
+}
+
+task taskVersion {
+    doLast {
+        println "版本是${versionName},版本号是${versionCode}"
+    }
+}
+
+/**
+ * 发布构件到项目文件夹/或mavenLocal()
+ */
+//生成jar的任务，类似于自定义wrapper
+task publishJar(type: Jar)
+//构件版本
+version '1.0.0'
+//构件通过artifacts{}闭包配置
+artifacts {
+    archives publishJar
+}
+//构件发布上传
+uploadArchives {
+    repositories {
+        flatDir {
+            name 'libs'
+            dirs "$projectDir/libs"
+        }
+
+        //将构建发布到mavenLocal()
+        mavenLocal()
+
+        /*
+        mavenDeployer{
+            repository(url:'http://xxx'){
+                //仓库用户名和密码
+                authentication(userName:'username',password:'pass')
+            }
+            snapshotRepository(url:'http://xxx'){
+                authentication(userName:'username',password:'pass')
+            }
+        }
+        */
+    }
+}

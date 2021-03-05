@@ -1,0 +1,15 @@
+// 配置子项目依赖的仓库
+subprojects {
+    repositories {
+        jcenter()
+    }
+}
+
+// 配置全部项目
+allprojects {
+
+}
+
+task hello {
+    println "Hello World"
+}

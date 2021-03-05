@@ -1,0 +1,8 @@
+// 版本信息统一管理
+
+ext{
+    //应用版本号、版本名称
+    appversionCode = 1
+    appVersionName = "1.0"
+    //其他版本号...
+}
